@@ -1,12 +1,43 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Home</title>
-  <link rel="stylesheet" href="/static/style.css">
+    <title>Student List</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-  <h1>Welcome to Flask Website</h1>
-  <a href="/about">About</a>
+<header>
+    <h1>Flask Student App</h1>
+    <nav>
+        <a href="/">Home</a>
+        <a href="/add">Add Student</a>
+        <a href="/about">About</a>
+    </nav>
+</header>
+
+<div class="container">
+    <h2>Students</h2>
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Action</th>
+        </tr>
+        {% for student in students %}
+        <tr>
+            <td>{{ student.id }}</td>
+            <td>{{ student.name }}</td>
+            <td>{{ student.email }}</td>
+            <td>
+                <a href="/delete/{{ student.id }}"><button>Delete</button></a>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+
+<footer>
+    &copy; 2026 Flask App
+</footer>
 </body>
 </html>
-

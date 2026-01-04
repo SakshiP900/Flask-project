@@ -1,50 +1,68 @@
 pipeline {
     agent any
 
+    environment {
+        DOCKER_IMAGE = "sakshiparadkar/flask-app:latest"
+    }
+
     stages {
 
-        stage('Clone Repository') {
+        stage('Checkout') {
             steps {
-                git 'https://github.com/USERNAME/flask-k8s-project.git'
+                git branch: 'main', url: 'https://github.com/SakshiP900/Flask-project.git'
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Docker Build & Push') {
             steps {
-                sh 'docker build -t username/flask-app:latest .'
-            }
-        }
+                withCredentials([usernamePassword(
+                    credentialsId: 'docker-hub-credentials',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+                    script {
+                        // Build Docker image
+                        sh 'docker build -t flask-app:latest .'
 
-        stage('Push Docker Image') {
-            steps {
-                sh 'docker push username/flask-app:latest'
-            }
-        }
+                        // Login to Docker Hub
+                        sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
 
-        stage('Start Minikube') {
-            steps {
-                sh '''
-                minikube start --driver=docker
-                '''
+                        // Tag and push image
+                        sh "docker tag flask-app:latest $DOCKER_IMAGE"
+                        sh "docker push $DOCKER_IMAGE"
+                    }
+                }
             }
         }
 
         stage('Deploy to Kubernetes') {
             steps {
-                sh '''
-                kubectl apply -f k8s/deployment.yml
-                kubectl apply -f k8s/service.yml
-                '''
+                withCredentials([file(
+                    credentialsId: 'kubeconfig-credentials',
+                    variable: 'KUBECONFIG_FILE'
+                )]) {
+                    script {
+                        // Deploy using kubeconfig secret
+                        sh """
+                        export KUBECONFIG="\$KUBECONFIG_FILE"
+                        kubectl apply -f k8s/db-secret.yml
+                        kubectl apply -f k8s/deployment.yml
+                        kubectl apply -f k8s/service.yml
+                        kubectl rollout restart deployment flask-app
+                        """
+                    }
+                }
             }
         }
 
-        stage('Expose Service') {
-            steps {
-                sh '''
-                minikube service flask-service --url
-                '''
-            }
+    }
+
+    post {
+        success {
+            echo "Flask app deployment succeeded!"
+        }
+        failure {
+            echo "Flask app deployment failed!"
         }
     }
 }
-

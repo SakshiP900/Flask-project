@@ -5,9 +5,9 @@ metadata:
 spec:
   type: NodePort
   selector:
-    app: flask
+    app: flask-app
   ports:
-    - port: 5000
+    - protocol: TCP
+      port: 5000
       targetPort: 5000
-      nodePort: 30007
-
+      nodePort: 30001  # Minikube/EC2 external access
