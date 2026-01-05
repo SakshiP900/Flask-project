@@ -15,14 +15,22 @@ Multi-page Flask website deployed using Docker, Jenkins, and Kubernetes.
 GitHub → Jenkins → Docker Hub → Kubernetes
 
 ## Run Locally
-python app.py
+1. Clone the repo:
+```bash
+git clone https://github.com/SakshiP900/Flask-project.git
+cd Flask-project
 
-## Build Docker Image
-docker build -t flask-app .
+2. Build Docker image:
+docker build -t flask-app:latest .
 
-## Kubernetes Deployment
-kubectl apply -f k8s/
+3. Run container:
+docker run -d -p 30001:5000 \
+  -e DB_HOST=<YOUR-RDS-ENDPOINT> \
+  -e DB_NAME=<DB_NAME> \
+  -e DB_USER=<DB_USER> \
+  -e DB_PASSWORD=<DB_PASSWORD> \
+  --name flask-demo \
+  flask-app:latest
 
-## Access App
-minikube service flask-service
-
+4. Access the app:
+http://<EC2-PUBLIC-IP>:30001
